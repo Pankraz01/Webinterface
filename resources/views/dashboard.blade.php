@@ -50,7 +50,16 @@
         <tbody>
         @foreach($animations as $animation)
             <tr>
-                <td>{{ $animation->file_name }}</td>
+                <td>
+                    @php
+                        $thumbnailPath = public_path('uploads/thumbnails/thumb_' . $animation->file_name);
+                    @endphp
+
+                    @if (file_exists($thumbnailPath))
+                        <img src="{{ asset('uploads/thumbnails/thumb_' . $animation->file_name) }}" alt="Thumbnail" style="width: 50px; height: auto;">
+                    @endif
+                    &nbsp;{{ $animation->file_name }}
+                </td>
                 <td>{{ $animation->tags }}</td>
                 <td>{{ $animation->created_at }}</td>
                 <td>

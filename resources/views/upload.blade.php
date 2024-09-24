@@ -10,6 +10,13 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
+
     <form action="{{ route('animations.upload') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
