@@ -13,16 +13,11 @@
     <form action="{{ route('animations.upload') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="form-group">
-            <label for="file">Animation Datei</label>
-            <input type="file" name="file" class="form-control" required>
+            <label for="files">Animationen hochladen</label>
+            <input type="file" name="files[]" class="form-control" multiple>
         </div>
-
-        <div class="form-group">
-            <label for="tags">Tags (getrennt durch Komma)</label>
-            <input type="text" name="tags" class="form-control" placeholder="z.B. transition, ink, monochrom" required>
-        </div>
-
         <button type="submit" class="btn btn-primary">Hochladen</button>
     </form>
+
 </div>
 @endsection

@@ -4,22 +4,35 @@
 <div class="container">
     <h2>Animationsliste</h2>
 
-    <!-- Filter-Formular -->
-    <form method="GET" action="{{ route('dashboard') }}">
-        <div class="form-group">
-            <label for="tag">Nach Tag filtern</label>
-            <input type="text" name="tag" class="form-control" placeholder="z.B. transition, ink, monochrom">
-        </div>
-        <button type="submit" class="btn btn-primary">Filtern</button>
-    </form>
+    <div class="container">
+        <!-- Filter-Formular -->
+        <form method="GET" action="{{ route('dashboard') }}">
+            <div class="input-group mb-3">
+                <input type="text" name="tag" class="form-control" placeholder="z.B. transition, ink, monochrom" aria-label="Tag">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="submit">Filtern</button>
+                </div>
+            </div>
+        </form>
 
-    <form action="{{ route('animations.forgetDeleted') }}" method="POST">
-        @csrf
-        @method('DELETE')  <!-- Wichtig: Diese Zeile stellt sicher, dass die DELETE-Methode verwendet wird -->
-        <button type="submit" class="btn btn-warning">
-            <i class="fas fa-trash"></i> Forget Deleted Files
-        </button>
-    </form>
+        <!-- Buttons unter dem Filter -->
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <form action="{{ route('animations.forgetDeleted') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-warning btn-block">
+                        <i class="fas fa-trash"></i> Forget Deleted Files
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-4 mb-2">
+                <a href="{{ route('animations.upload') }}" class="btn btn-primary btn-block">
+                    <i class="fas fa-upload"></i> Animation hochladen
+                </a>
+            </div>
+        </div>
+    </div>
+
 
 
 
