@@ -16,8 +16,11 @@
     <form action="{{ route('animations.forgetDeleted') }}" method="POST">
         @csrf
         @method('DELETE')
-        <button type="submit" class="btn btn-warning">Forget Deleted Files</button>
+        <button type="submit" class="btn btn-warning">
+            <i class="fas fa-trash"></i> Forget Deleted Files
+        </button>
     </form>
+
 
 
     <!-- Datei-Tabelle -->
@@ -37,17 +40,27 @@
                 <td>{{ $animation->tags }}</td>
                 <td>{{ $animation->created_at }}</td>
                 <td>
+                    <!-- Badge für gelöschte Dateien -->
                     @if (!file_exists(public_path('uploads/' . $animation->file_name)))
-                        <span class="badge bg-danger">Deleted</span>
-                    @endif
+                        <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Deleted</span>
+                    @else
+                        <!-- Datei ansehen -->
+                        <a href="{{ url('uploads/' . $animation->file_name) }}" target="_blank" class="btn btn-link text-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
 
-                    <!-- Datei ansehen, herunterladen, löschen -->
-                    <a href="{{ url('uploads/' . $animation->file_name) }}" target="_blank" class="btn btn-info">Ansehen</a>
-                    <a href="{{ route('animations.download', $animation->file_name) }}" class="btn btn-success">Herunterladen</a>
+                        <!-- Datei herunterladen -->
+                        <a href="{{ route('animations.download', $animation->file_name) }}" class="btn btn-link text-success">
+                            <i class="fas fa-save"></i>
+                        </a>
+                    @endif
+                    <!-- Datei löschen -->
                     <form action="{{ route('animations.destroy', $animation->id) }}" method="POST" style="display:inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Bist du sicher?')">Löschen</button>
+                        <button type="submit" class="btn btn-link text-danger" onclick="return confirm('Bist du sicher?')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </form>
                 </td>
             </tr>
