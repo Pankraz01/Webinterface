@@ -15,11 +15,12 @@
 
     <form action="{{ route('animations.forgetDeleted') }}" method="POST">
         @csrf
-        @method('DELETE')
+        @method('DELETE')  <!-- Wichtig: Diese Zeile stellt sicher, dass die DELETE-Methode verwendet wird -->
         <button type="submit" class="btn btn-warning">
             <i class="fas fa-trash"></i> Forget Deleted Files
         </button>
     </form>
+
 
 
 
