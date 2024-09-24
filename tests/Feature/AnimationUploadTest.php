@@ -26,7 +26,6 @@ class AnimationUploadTest extends TestCase
         $user = User::factory()->create();
         $file = \Illuminate\Http\UploadedFile::fake()->image('animation.png');
         
-        // Führe den Upload durch
         $response = $this->actingAs($user)->post('/upload', [
             'file' => $file,
             'tags' => 'transition, ink, monochrom',
@@ -34,13 +33,8 @@ class AnimationUploadTest extends TestCase
 
         $response->assertSessionHas('success');
 
-        // Hole die hochgeladene Animation aus der Datenbank
         $animation = Animation::latest()->first();
-
-        // Überprüfe, ob der Dateiname korrekt generiert wurde
         $this->assertMatchesRegularExpression('/^[0-9]+_animation\.png$/', $animation->file_name);
-
-        // Überprüfe, ob die Tags korrekt gespeichert wurden
         $this->assertEquals('transition, ink, monochrom', $animation->tags);
     }
 
@@ -57,5 +51,56 @@ class AnimationUploadTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('animation.png');
         $response->assertSee('transition, ink, monochrom');
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function user_can_view_any_uploaded_animation_file()
+    {
+        $user = User::factory()->create();
+    
+        // Stelle sicher, dass das Upload-Verzeichnis existiert
+        $uploadPath = public_path('uploads');
+        if (!file_exists($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+    
+        // Füge eine Dummy-Datei im Upload-Verzeichnis hinzu, falls noch keine existiert
+        $fileName = 'dummy_file.png';
+        $filePath = $uploadPath . '/' . $fileName;
+        if (!file_exists($filePath)) {
+            \Illuminate\Support\Facades\File::put($filePath, 'dummy content');
+        }
+    
+        // Erstelle einen Eintrag in der Datenbank
+        $animation = Animation::factory()->create([
+            'file_name' => $fileName,
+            'tags' => 'test, dummy, file',
+        ]);
+    
+        // Rufe die URL auf, um die Datei anzusehen
+        $response = $this->actingAs($user)->get(asset('uploads/' . $fileName));
+        $response->assertStatus(200);
+    }
+    
+    
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function user_can_download_animation_file()
+    {
+        $user = User::factory()->create();
+
+        // Füge eine Datei in das Upload-Verzeichnis ein
+        $filePath = public_path('uploads/animation.png');
+        \Illuminate\Support\Facades\File::put($filePath, 'dummy content');
+
+        $animation = Animation::factory()->create([
+            'file_name' => 'animation.png',
+            'tags' => 'transition, ink, monochrom',
+        ]);
+
+        // Teste den Datei-Download
+        $response = $this->actingAs($user)->get(route('animations.download', $animation->file_name));
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Disposition', 'attachment; filename=animation.png');
     }
 }
