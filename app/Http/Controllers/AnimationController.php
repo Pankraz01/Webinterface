@@ -15,18 +15,25 @@ class AnimationController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'files.*' => 'required|file|mimes:jpg,jpeg,png,mp4', // Passe die Dateitypen nach Bedarf an
+            'files.*' => 'required|file|mimes:jpg,jpeg,png,mp4', // Dateitypen anpassen
+            'tags' => 'required|array', // Tags müssen ein Array sein
+            'tags.*' => 'string', // Jeder Tag muss ein String sein
         ]);
     
-        foreach ($request->file('files') as $file) {
+        foreach ($request->file('files') as $index => $file) {
             $fileName = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads'), $fileName);
-            // Hier kannst du auch die Dateiinformationen in der Datenbank speichern
+    
+            // Speichern der Datei und der zugehörigen Tags in der Datenbank
+            Animation::create([
+                'file_name' => $fileName,
+                'tags' => $request->tags[$index] ?? '', // Holen des entsprechenden Tags
+            ]);
         }
     
         return redirect()->route('dashboard')->with('success', 'Dateien erfolgreich hochgeladen!');
     }
-    
+      
 
     public function download($file)
     {
