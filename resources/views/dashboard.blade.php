@@ -33,10 +33,6 @@
         </div>
     </div>
 
-
-
-
-
     <!-- Datei-Tabelle -->
     <table class="table mt-4">
         <thead>
@@ -60,7 +56,17 @@
                     @endif
                     &nbsp;{{ $animation->file_name }}
                 </td>
-                <td>{{ $animation->tags }}</td>
+                
+                <td>
+                    @if($animation->tags->isNotEmpty())
+                        @foreach($animation->tags as $tag)
+                            <span class="badge badge-pill badge-primary">{{ $tag->name }}</span>
+                        @endforeach
+                    @else
+                        <span class="text-muted">Keine Tags vorhanden</span>
+                    @endif
+                </td>
+                               
                 <td>{{ $animation->created_at }}</td>
                 <td>
                     <!-- Badge für gelöschte Dateien -->
