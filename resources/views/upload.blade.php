@@ -32,12 +32,6 @@
         const container = document.getElementById('tags-container');
         container.innerHTML = ''; // Vorherige Felder löschen
 
-        @php
-            $allTags = \App\Models\Tag::all()->pluck('name');
-        @endphp
-
-        const allTags = @json($allTags);
-
         for (let i = 0; i < files.length; i++) {
             const div = document.createElement('div');
             div.className = 'form-group';
@@ -46,24 +40,25 @@
             const newTagField = document.createElement('input');
             newTagField.type = 'text';
             newTagField.name = 'tags[]';
-            newTagField.className = 'form-control';
+            newTagField.className = 'form-control tagify-input';
             newTagField.placeholder = `Tags für ${files[i].name}`;
-            newTagField.setAttribute('list', `tags-list-${i}`);
-
-            // Datalist für Autocomplete
-            const dataList = document.createElement('datalist');
-            dataList.id = `tags-list-${i}`;
-
-            allTags.forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag;
-                dataList.appendChild(option);
-            });
 
             div.appendChild(newTagField);
-            div.appendChild(dataList);
             container.appendChild(div);
+
+            // Tagify initialisieren
+            new Tagify(newTagField, {
+                whitelist: @json($tags),  // Existierende Tags aus der Datenbank
+                maxTags: 10,
+                dropdown: {
+                    maxItems: 20,
+                    classname: "tags-look",
+                    enabled: 0, // zeigt die Vorschläge sofort an
+                    closeOnSelect: false
+                }
+            });
         }
     });
 </script>
+
 @endsection
