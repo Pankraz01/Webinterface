@@ -72,9 +72,10 @@ class AnimationController extends Controller
             ]);
     
             // Tags speichern oder abrufen
-            $tags = explode(',', $request->tags[$index]);
-            foreach ($tags as $tagName) {
-                $tag = Tag::firstOrCreate(['name' => trim($tagName)]);
+            $tags = json_decode($request->tags[$index], true); // Hier wird das JSON dekodiert
+
+            foreach ($tags as $tagData) {
+                $tag = Tag::firstOrCreate(['name' => trim($tagData['value'])]);
                 $animation->tags()->attach($tag);
             }
         }

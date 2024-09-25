@@ -67,12 +67,14 @@
                 <td>
                     @if($animation->tags->isNotEmpty())
                         @foreach($animation->tags as $tag)
-                            <span class="badge badge-pill badge-primary">{{ $tag->name }}</span>
+                            <span class="badge badge-pill badge-primary">{{ $tag['name'] }}</span>
                         @endforeach
                     @else
                         <span class="text-muted">Keine Tags vorhanden</span>
                     @endif
                 </td>
+                      
+                
                                
                 <td>{{ $animation->created_at }}</td>
                 <td>
