@@ -13,7 +13,11 @@ class AnimationController extends Controller
 {
     public function showUploadForm()
     {
-        return view('upload');
+        // Alle existierenden Tags holen
+        $tags = Tag::all()->pluck('name');
+
+        // Die Tags an das Upload-View übergeben
+        return view('upload', compact('tags'));
     }
 
     public function upload(Request $request)

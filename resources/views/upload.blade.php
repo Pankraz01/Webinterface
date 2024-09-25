@@ -19,19 +19,27 @@
 
     <form action="{{ route('animations.upload') }}" method="POST" enctype="multipart/form-data">
         @csrf
-
+    
+        <!-- Mehrere Dateien auswählen -->
         <div class="form-group">
             <label for="files">Animation Dateien</label>
-            <input type="file" id="file-input" name="files[]" class="form-control" multiple required>
+            <input type="file" name="files[]" class="form-control" multiple required>
         </div>
-
-        <div id="tags-container">
+    
+        <!-- Tag Eingabefeld mit Autocomplete -->
+        <div class="form-group">
             <label for="tags">Tags (getrennt durch Komma)</label>
-            <div id="tag-inputs"></div> <!-- Hier werden die Tag-Inputs hinzugefügt -->
+            <input type="text" name="tags[]" class="form-control" list="tags-list">
+            <datalist id="tags-list">
+                @foreach($tags as $tag)
+                    <option value="{{ $tag }}">
+                @endforeach
+            </datalist>
         </div>
-
+    
         <button type="submit" class="btn btn-primary">Hochladen</button>
     </form>
+    
 
     <script>
         const fileInput = document.getElementById('file-input');
