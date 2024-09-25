@@ -48,15 +48,22 @@
             <tr>
                 <td>
                     @php
+                        // Versuch beide möglichen Thumbnail-Dateinamen zu finden (mit und ohne zusätzliche Erweiterung .jpg)
                         $thumbnailPath = public_path('uploads/thumbnails/thumb_' . $animation->file_name);
+                        $thumbnailPathWithJpg = $thumbnailPath . '.jpg'; // Für Video-Dateien mit zusätzlicher .jpg Erweiterung
                     @endphp
-
-                    @if (file_exists($thumbnailPath))
-                        <img src="{{ asset('uploads/thumbnails/thumb_' . $animation->file_name) }}" alt="Thumbnail" style="width: 50px; height: auto;">
+                
+                    @if (file_exists($thumbnailPath) || file_exists($thumbnailPathWithJpg))
+                        @if (file_exists($thumbnailPath))
+                            <img src="{{ asset('uploads/thumbnails/thumb_' . $animation->file_name) }}" alt="Thumbnail" style="width: 50px; height: auto;">
+                        @elseif (file_exists($thumbnailPathWithJpg))
+                            <img src="{{ asset('uploads/thumbnails/thumb_' . $animation->file_name . '.jpg') }}" alt="Thumbnail" style="width: 50px; height: auto;">
+                        @endif
                     @endif
                     &nbsp;{{ $animation->file_name }}
                 </td>
                 
+
                 <td>
                     @if($animation->tags->isNotEmpty())
                         @foreach($animation->tags as $tag)

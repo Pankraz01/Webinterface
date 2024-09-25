@@ -22,50 +22,63 @@ class AnimationController extends Controller
 
     public function upload(Request $request)
     {
-        // Validierung der hochgeladenen Dateien und Tags
-        // 'files.*' bedeutet, dass jede Datei in einem Array von Dateien überprüft wird
-        // Es wird verlangt, dass die Dateien bestimmte Formate haben (z.B. jpg, png, mp4 etc.)
         $request->validate([
             'files.*' => 'required|file|mimes:jpg,jpeg,png,mp4,mov,mxf,m4v,tif,svg,psd',
-            // 'tags' muss ein Array sein, und jeder Tag muss ein String sein
             'tags' => 'required|array',
             'tags.*' => 'string',
         ]);
     
-        // Iterieren durch jede hochgeladene Datei
         foreach ($request->file('files') as $index => $file) {
-            // Erstellen eines eindeutigen Dateinamens mit einem Zeitstempel und dem ursprünglichen Dateinamen
             $fileName = time() . '_' . $file->getClientOriginalName();
-            // Verschieben der Datei in den öffentlichen Uploads-Ordner
             $file->move(public_path('uploads'), $fileName);
     
-            // Thumbnail-Erstellung wird hier übersprungen, da sie laut Beschreibung korrekt ist.
+            // Thumbnail-Verzeichnis erstellen
+            $thumbnailPath = public_path('uploads/thumbnails');
+            if (!file_exists($thumbnailPath)) {
+                mkdir($thumbnailPath, 0755, true);
+            }
     
-            // Speichern der Datei in der Datenbank in der 'animations' Tabelle
-            // Dabei wird der Dateiname gespeichert, aber noch keine Tags
+            $thumbnailName = 'thumb_' . $fileName;
+            $fileExtension = $file->getClientOriginalExtension();
+    
+            // Thumbnail-Erstellung
+            try {
+                if (in_array($fileExtension, ['jpg', 'jpeg', 'png'])) {
+                    // Bild-Thumbnail erstellen
+                    $thumbnail = Image::make(public_path('uploads/' . $fileName))->resize(150, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
+                    $thumbnail->save($thumbnailPath . '/' . $thumbnailName);
+                } elseif (in_array($fileExtension, ['mp4', 'mov', 'mxf', 'm4v'])) {
+                    // Video-Thumbnail erstellen
+                    $videoPath = public_path('uploads/' . $fileName);
+                    $thumbnailVideo = $thumbnailPath . '/' . $thumbnailName . '.jpg';
+    
+                    // Überprüfen, ob ffmpeg verfügbar ist
+                    if (shell_exec("which ffmpeg")) {
+                        $cmd = "ffmpeg -i $videoPath -ss 00:00:01.000 -vframes 1 $thumbnailVideo";
+                        shell_exec($cmd);
+                    } else {
+                        Log::error("FFmpeg nicht verfügbar. Thumbnail für Video $fileName konnte nicht erstellt werden.");
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("Fehler beim Erstellen des Thumbnails: " . $e->getMessage());
+            }
+    
+            // Speichern der Animation in der Datenbank
             $animation = Animation::create([
                 'file_name' => $fileName,
             ]);
     
-            // Zerlegen des Tags-Arrays, das an derselben Stelle wie die Datei steht
-            // Jeder Tag wird durch Komma getrennt
+            // Tags speichern oder abrufen
             $tags = explode(',', $request->tags[$index]);
-            $tagIds = [];
-    
-            // Iterieren durch die Tags und sie in der Datenbank speichern, falls sie noch nicht existieren
             foreach ($tags as $tagName) {
-                // Entweder den existierenden Tag finden oder einen neuen erstellen
                 $tag = Tag::firstOrCreate(['name' => trim($tagName)]);
-                // Speichern der Tag-ID in einem Array für das spätere Zuordnen
-                $tagIds[] = $tag->id;  // Nur die ID für die Pivot-Tabelle speichern
+                $animation->tags()->attach($tag);
             }
-    
-            // Die Tags der Animation zuweisen, indem die Tag-IDs in die Pivot-Tabelle eingefügt werden
-            $animation->tags()->sync($tagIds);
         }
     
-        // Nach dem Hochladen und Speichern der Dateien und Tags zurück zum Dashboard leiten
-        // Mit einer Erfolgsmeldung
         return redirect()->route('dashboard')->with('success', 'Dateien erfolgreich hochgeladen!');
     }
     

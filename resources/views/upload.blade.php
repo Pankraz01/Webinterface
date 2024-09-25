@@ -10,78 +10,60 @@
         </div>
     @endif
 
-    @if (session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-
-
     <form action="{{ route('animations.upload') }}" method="POST" enctype="multipart/form-data">
         @csrf
-    
-        <!-- Mehrere Dateien auswählen -->
         <div class="form-group">
             <label for="files">Animation Dateien</label>
-            <input type="file" name="files[]" class="form-control" multiple required>
+            <input type="file" id="files" name="files[]" class="form-control" multiple required>
         </div>
-    
-        <!-- Tag Eingabefeld mit Autocomplete -->
-        <div class="form-group">
-            <label for="tags">Tags (getrennt durch Komma)</label>
-            <input type="text" name="tags[]" class="form-control" list="tags-list">
-            <datalist id="tags-list">
-                @foreach($tags as $tag)
-                    <option value="{{ $tag }}">
-                @endforeach
-            </datalist>
+
+        <!-- Tags für jede Datei dynamisch hinzufügen -->
+        <div class="form-group" id="tags-container">
+            <!-- Die dynamisch generierten Tag-Felder erscheinen hier -->
         </div>
-    
+
         <button type="submit" class="btn btn-primary">Hochladen</button>
     </form>
-    
-
-    <script>
-        const fileInput = document.getElementById('file-input');
-        const tagInputsContainer = document.getElementById('tag-inputs');
-
-        fileInput.addEventListener('change', function(event) {
-            const files = event.target.files;
-            updateTagFields(files);
-        });
-
-        function updateTagFields(files) {
-            // Leere den Container für die Tag-Inputs
-            tagInputsContainer.innerHTML = '';
-
-            // Erstelle Tag-Inputs für jede hochgeladene Datei
-            Array.from(files).forEach((file, index) => {
-                const tagWrapper = document.createElement('div');
-                tagWrapper.className = 'form-group d-flex align-items-center mb-2';
-
-                // Thumbnail
-                const thumbnail = document.createElement('img');
-                thumbnail.src = URL.createObjectURL(file); // Erstelle ein URL-Objekt für die Vorschau
-                thumbnail.style.width = '50px'; // Setze die Breite des Thumbnails
-                thumbnail.style.height = 'auto'; // Behalte das Seitenverhältnis
-                thumbnail.className = 'me-2'; // Margin-Ende
-
-                // Tag-Input
-                const tagInput = document.createElement('input');
-                tagInput.type = 'text';
-                tagInput.name = 'tags[]';
-                tagInput.className = 'form-control';
-                tagInput.placeholder = 'Tags für ' + file.name;
-                tagInput.required = true;
-
-                // Füge Thumbnail und Input in das Wrapper-Element ein
-                tagWrapper.appendChild(thumbnail);
-                tagWrapper.appendChild(tagInput);
-
-                // Füge das Wrapper-Element in den Tag-Container ein
-                tagInputsContainer.appendChild(tagWrapper);
-            });
-        }
-    </script>
 </div>
+
+<script>
+    document.getElementById('files').addEventListener('change', function(e) {
+        const files = e.target.files;
+        const container = document.getElementById('tags-container');
+        container.innerHTML = ''; // Vorherige Felder löschen
+
+        @php
+            $allTags = \App\Models\Tag::all()->pluck('name');
+        @endphp
+
+        const allTags = @json($allTags);
+
+        for (let i = 0; i < files.length; i++) {
+            const div = document.createElement('div');
+            div.className = 'form-group';
+
+            // Input-Feld für Tags
+            const newTagField = document.createElement('input');
+            newTagField.type = 'text';
+            newTagField.name = 'tags[]';
+            newTagField.className = 'form-control';
+            newTagField.placeholder = `Tags für ${files[i].name}`;
+            newTagField.setAttribute('list', `tags-list-${i}`);
+
+            // Datalist für Autocomplete
+            const dataList = document.createElement('datalist');
+            dataList.id = `tags-list-${i}`;
+
+            allTags.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                dataList.appendChild(option);
+            });
+
+            div.appendChild(newTagField);
+            div.appendChild(dataList);
+            container.appendChild(div);
+        }
+    });
+</script>
 @endsection
