@@ -26,7 +26,7 @@
                 </form>
             </div>
             <div class="col-md-4 mb-2">
-                <a href="{{ route('animations.upload') }}" class="btn btn-primary btn-block">
+                <a href="{{ route('animations.upload.form') }}" class="btn btn-primary btn-block">
                     <i class="fas fa-upload"></i> Animation hochladen
                 </a>
             </div>

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AnimationController;
+use App\Http\Controllers\UploadController;
 
 
 Auth::routes();
@@ -12,7 +13,7 @@ Route::get('/', function () {
 
 
 Route::get('/upload', [AnimationController::class, 'showUploadForm'])->name('animations.upload.form')->middleware('auth');
-Route::post('/upload', [AnimationController::class, 'upload'])->name('animations.upload')->middleware('auth');
+#Route::post('/upload', [AnimationController::class, 'upload'])->name('animations.upload')->middleware('auth');
 
 Route::get('/download/{file}', [AnimationController::class, 'download'])->name('animations.download')->middleware('auth');
 
@@ -20,3 +21,5 @@ Route::get('/dashboard', [AnimationController::class, 'index'])->name('dashboard
 
 Route::delete('/animations/{id}', [AnimationController::class, 'destroy'])->name('animations.destroy')->middleware('auth');
 Route::post('/animations/forget-deleted', [AnimationController::class, 'forgetDeleted'])->name('animations.forgetDeleted')->middleware('auth');
+
+Route::post('/upload-worker', [UploadController::class, 'uploadWithWorker'])->name('animations.upload.worker')->middleware('auth');

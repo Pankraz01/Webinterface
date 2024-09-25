@@ -10,15 +10,22 @@
         </div>
     @endif
 
-    <form action="{{ route('animations.upload') }}" method="POST" enctype="multipart/form-data">
+    <form id="uploadForm" action="{{ route('animations.upload.worker') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="form-group">
             <label for="files">Animation Dateien</label>
             <input type="file" id="files" name="files[]" class="form-control" multiple required>
         </div>
 
-        <!-- Container für die dynamischen Elemente -->
-        <div id="dynamic-fields-container"></div>
+        <!-- Progressbar -->
+        <div class="progress mb-3" style="height: 25px; display: none;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;">0%</div>
+        </div>
+
+        <!-- Tags für jede Datei dynamisch hinzufügen -->
+        <div class="form-group" id="tags-container">
+            <!-- Dynamisch generierte Felder kommen hier hin -->
+        </div>
 
         <button type="submit" class="btn btn-primary">Hochladen</button>
     </form>
@@ -29,8 +36,8 @@
 <script>
     document.getElementById('files').addEventListener('change', function(e) {
         const files = e.target.files;
-        const dynamicContainer = document.getElementById('dynamic-fields-container');
-        dynamicContainer.innerHTML = ''; // Vorherige Felder löschen
+        const container = document.getElementById('tags-container');
+        container.innerHTML = ''; // Vorherige Felder löschen
 
         @php
             $allTags = \App\Models\Tag::all()->pluck('name');
@@ -39,55 +46,80 @@
         const allTags = @json($allTags);
 
         for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const wrapperDiv = document.createElement('div');
-            wrapperDiv.className = 'form-group d-flex align-items-center'; // Flexbox für horizontale Anordnung
+            const div = document.createElement('div');
+            div.className = 'form-group';
 
-            // Vorschau für Bild- und Videodateien
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                let previewElement;
-                if (file.type.startsWith('image/')) {
-                    previewElement = document.createElement('img');
-                    previewElement.src = event.target.result;
-                    previewElement.style.width = '100px';
-                    previewElement.style.height = 'auto';
-                    previewElement.style.marginRight = '10px'; // Abstand zum Eingabefeld
-                } else if (file.type.startsWith('video/')) {
-                    previewElement = document.createElement('video');
-                    previewElement.src = event.target.result;
-                    previewElement.controls = true;
-                    previewElement.style.width = '150px';
-                    previewElement.style.marginRight = '10px'; // Abstand zum Eingabefeld
-                    previewElement.currentTime = 1;
-                }
+            const thumbnail = document.createElement('img');
+            thumbnail.style.width = "150px";
+            thumbnail.style.height = "auto";
+            thumbnail.style.marginBottom = "10px";
+            thumbnail.src = URL.createObjectURL(files[i]);
 
-                wrapperDiv.appendChild(previewElement);
-            };
-            reader.readAsDataURL(file);
-
-            // Input-Feld für Tags mit Tagify
             const newTagField = document.createElement('input');
             newTagField.type = 'text';
             newTagField.name = 'tags[]';
             newTagField.className = 'form-control';
-            newTagField.placeholder = `Tags für ${file.name}`;
+            newTagField.placeholder = `Tags für ${files[i].name}`;
+            newTagField.setAttribute('list', `tags-list-${i}`);
 
-            wrapperDiv.appendChild(newTagField);
-            dynamicContainer.appendChild(wrapperDiv);
+            // Datalist für Autocomplete
+            const dataList = document.createElement('datalist');
+            dataList.id = `tags-list-${i}`;
 
-            // Tagify initialisieren
+            allTags.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                dataList.appendChild(option);
+            });
+
+            div.appendChild(thumbnail);
+            div.appendChild(newTagField);
+            div.appendChild(dataList);
+            container.appendChild(div);
+
+            // Tagify für die Eingabefelder aktivieren
             new Tagify(newTagField, {
                 whitelist: allTags,
                 dropdown: {
-                    maxItems: 10,           // Max. Vorschläge in der Dropdown-Liste
-                    enabled: 0,             // Show suggestions on focus
-                    closeOnSelect: false    // Dropdown nicht nach Auswahl schließen
+                    maxItems: 20,
+                    classname: "tags-look",
+                    enabled: 0,
+                    closeOnSelect: false
                 }
             });
         }
     });
+
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        const progressBar = document.querySelector('.progress-bar');
+        const progressWrapper = document.querySelector('.progress');
+
+        progressWrapper.style.display = 'block';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '{{ route('animations.upload.worker') }}', true);
+
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progressBar.style.width = percentComplete + '%';
+                progressBar.textContent = Math.round(percentComplete) + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                location.reload(); // Erfolgreiches Hochladen, Seite neu laden
+            } else {
+                alert('Fehler beim Hochladen der Datei!');
+            }
+        };
+
+        xhr.send(formData);
+    });
 </script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
 @endsection
