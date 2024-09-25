@@ -17,11 +17,8 @@
             <input type="file" id="files" name="files[]" class="form-control" multiple required>
         </div>
 
-        <!-- Dynamisch generierte Vorschau der Dateien -->
-        <div class="form-group" id="thumbnails-container"></div>
-
-        <!-- Tags für jede Datei dynamisch hinzufügen -->
-        <div class="form-group" id="tags-container"></div>
+        <!-- Container für die dynamischen Elemente -->
+        <div id="dynamic-fields-container"></div>
 
         <button type="submit" class="btn btn-primary">Hochladen</button>
     </form>
@@ -32,10 +29,8 @@
 <script>
     document.getElementById('files').addEventListener('change', function(e) {
         const files = e.target.files;
-        const tagsContainer = document.getElementById('tags-container');
-        const thumbnailsContainer = document.getElementById('thumbnails-container');
-        tagsContainer.innerHTML = ''; // Vorherige Felder löschen
-        thumbnailsContainer.innerHTML = ''; // Vorherige Thumbnails löschen
+        const dynamicContainer = document.getElementById('dynamic-fields-container');
+        dynamicContainer.innerHTML = ''; // Vorherige Felder löschen
 
         @php
             $allTags = \App\Models\Tag::all()->pluck('name');
@@ -45,17 +40,41 @@
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const div = document.createElement('div');
-            div.className = 'form-group';
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.className = 'form-group d-flex align-items-center'; // Flexbox für horizontale Anordnung
+
+            // Vorschau für Bild- und Videodateien
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                let previewElement;
+                if (file.type.startsWith('image/')) {
+                    previewElement = document.createElement('img');
+                    previewElement.src = event.target.result;
+                    previewElement.style.width = '100px';
+                    previewElement.style.height = 'auto';
+                    previewElement.style.marginRight = '10px'; // Abstand zum Eingabefeld
+                } else if (file.type.startsWith('video/')) {
+                    previewElement = document.createElement('video');
+                    previewElement.src = event.target.result;
+                    previewElement.controls = true;
+                    previewElement.style.width = '150px';
+                    previewElement.style.marginRight = '10px'; // Abstand zum Eingabefeld
+                    previewElement.currentTime = 1;
+                }
+
+                wrapperDiv.appendChild(previewElement);
+            };
+            reader.readAsDataURL(file);
 
             // Input-Feld für Tags mit Tagify
             const newTagField = document.createElement('input');
             newTagField.type = 'text';
             newTagField.name = 'tags[]';
             newTagField.className = 'form-control';
-            newTagField.placeholder = `Tags für ${files[i].name}`;
-            div.appendChild(newTagField);
-            tagsContainer.appendChild(div);
+            newTagField.placeholder = `Tags für ${file.name}`;
+
+            wrapperDiv.appendChild(newTagField);
+            dynamicContainer.appendChild(wrapperDiv);
 
             // Tagify initialisieren
             new Tagify(newTagField, {
@@ -63,30 +82,9 @@
                 dropdown: {
                     maxItems: 10,           // Max. Vorschläge in der Dropdown-Liste
                     enabled: 0,             // Show suggestions on focus
-                    closeOnSelect: false    // Don't close the dropdown after selecting a tag
+                    closeOnSelect: false    // Dropdown nicht nach Auswahl schließen
                 }
             });
-
-            // Vorschau für Bild- und Videodateien
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                if (file.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = event.target.result;
-                    img.style.width = '100px';
-                    img.style.marginRight = '10px';
-                    thumbnailsContainer.appendChild(img);
-                } else if (file.type.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = event.target.result;
-                    video.controls = true;
-                    video.style.width = '150px';
-                    video.style.marginRight = '10px';
-                    video.currentTime = 1;  // Zeigt das erste Frame des Videos
-                    thumbnailsContainer.appendChild(video);
-                }
-            };
-            reader.readAsDataURL(file);
         }
     });
 </script>
